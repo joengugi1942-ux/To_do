@@ -1,10 +1,7 @@
 from fastapi import FastAPI
+from routers import products
 
 app = FastAPI()
 
-@app.get("/user")
-def get_user():
-    return {
-        "name": "joe",
-        "description": "Today I am learning how to make files and arrangement"
-    }
+app.include_router(products.router, prefix="/products", tags=["Products"])
+
