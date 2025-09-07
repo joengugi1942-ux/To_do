@@ -1,41 +1,54 @@
-from fastapi import FastAPI, APIRouter, HTTPException
-from pydantic import BaseModel
-from typing import Optional, List
+from fastapi import APIRouter, HTTPException
+from typing import List, Dict, Any
 
-app = FastAPI()
 router = APIRouter()
 
 
 products = [
-    {"id": 1, "name": "phone", "description": "model 42 2023", "price": 550},
-    {"id": 2, "name": "laptop", "description": "hp i core3", "price": 1000},
-    {"id": 3, "name": "television", "description": "TCL smart tv", "price": 550},
+    {"id": 1, "name": "phone", "price": 474, "quantity": 60},
+    {"id": 2, "name": "laptop", "price": 1500, "quantity": 70},
+    {"id": 3, "name": "ipad", "price": 474, "quantity": 30},
+    {"id": 4, "name": "tablet", "price": 474, "quantity": 57}
 ]
 
-@router.get("/", response_model=List[Product])
+
+@router.get('/products', response_model=List[Dict[str, Any]])
 def get_products():
     return products
 
-@router.get("/{product_id}", response_model=Product)
+
+@router.get('/products/{product_id}', response_model=Dict[str, Any])
 def get_product(product_id: int):
-    product = next((p for p in products if p["id"] == product_id), None)
-    if product is None:
-        raise HTTPException(status_code=404, detail=f"Product with id {product_id} not found")
-    return product
+    for product in products:
+        if product["id"] == product_id:
+            return product
+    raise HTTPException(status_code=404, detail="Product not found")
 
-@router.post("/", response_model=Product)
-def create_product(product: Product):
+
+@router.post('/products', response_model=Dict[str, Any])
+def create_product(product: dict):
     # Generate new ID
-    new_id = max([p["id"] for p in products]) + 1 if products else 1
-    product_dict = product.dict()
-    product_dict["id"] = new_id
-    products.append(product_dict)
-    return product_dict
+    new_id = max(p["id"] for p in products) + 1 if products else 1
+    new_product = {"id": new_id, **product}
+    products.append(new_product)
+    return new_product
 
 
-app.include_router(router, prefix="/products", tags=["Products"])
+@router.put('/products/{product_id}', response_model=Dict[str, Any])
+def update_product(product_id: int, product_data: dict):
+    for index, product in enumerate(products):
+        if product["id"] == product_id:
+            # Update the product with new data, keeping the same ID
+            updated_product = {"id": product_id, **product_data}
+            products[index] = updated_product
+            return updated_product
+    raise HTTPException(status_code=404, detail="Product not found")
 
 
-@app.get("/")
-def root():
-    return {"message": "Welcome to Products API"}
+@router.delete('/products/{product_id}')
+def delete_product(product_id: int):
+    for index, product in enumerate(products):
+        if product["id"] == product_id:
+            deleted_product = products.pop(index)
+            return {"message": "Product deleted", "deleted_product": deleted_product}
+    raise HTTPException(status_code=404, detail="Product not found")
