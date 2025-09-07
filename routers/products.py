@@ -1,6 +1,6 @@
 from fastapi import FastAPI, APIRouter, HTTPException
 from pydantic import BaseModel
-from typing import Optional, List
+from typing import Optional
 
 app = FastAPI()
 router = APIRouter()
@@ -12,20 +12,20 @@ products = [
     {"id": 3, "name": "television", "description": "TCL smart tv", "price": 550},
 ]
 
-@router.get("/", response_model=List[Product])
+@router.get("/", response_model=products)
 def get_products():
     return products
 
-@router.get("/{product_id}", response_model=Product)
+@router.get("/{product_id}", response_model=Products)
 def get_product(product_id: int):
     product = next((p for p in products if p["id"] == product_id), None)
     if product is None:
         raise HTTPException(status_code=404, detail=f"Product with id {product_id} not found")
     return product
 
-@router.post("/", response_model=Product)
-def create_product(product: Product):
-    # Generate new ID
+@router.post("/", response_model=Products)
+def create_product(product: Products):
+
     new_id = max([p["id"] for p in products]) + 1 if products else 1
     product_dict = product.dict()
     product_dict["id"] = new_id
