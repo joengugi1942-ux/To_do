@@ -2,7 +2,7 @@ from fastapi import FastAPI, Depends, HTTPException
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from typing import List
-from routers import products
+from routers import routers
 
 
 app = FastAPI()
